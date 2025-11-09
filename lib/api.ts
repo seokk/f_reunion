@@ -131,6 +131,10 @@ export async function analyzeReunionProbability(formData: FormData): Promise<Ana
 
   const message = formatFormDataToMessage(formData)
 
+  console.log('=== API 요청 시작 ===')
+  console.log('API URL:', `${apiUrl}/api/v1/chat`)
+  console.log('요청 메시지:', message)
+
   const response = await fetch(`${apiUrl}/api/v1/chat`, {
     method: 'POST',
     headers: {
@@ -143,11 +147,20 @@ export async function analyzeReunionProbability(formData: FormData): Promise<Ana
     })
   })
 
+  console.log('응답 상태:', response.status, response.statusText)
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+    console.error('API 에러:', errorData)
     throw new Error(errorData.error || `API request failed with status ${response.status}`)
   }
 
   const data: AnalysisResponse = await response.json()
+  console.log('=== API 응답 성공 ===')
+  console.log('응답 데이터:', data)
+  console.log('사용된 토큰:', data.tokens_used)
+  console.log('남은 토큰:', data.tokens_remaining_today)
+  console.log('응답 내용 길이:', data.response.length, '자')
+
   return data
 }

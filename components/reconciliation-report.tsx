@@ -27,12 +27,14 @@ interface FormData {
   myGender: string
   myAge: string
   myMBTI: string
-  myPersonality: string[]
+  myPersonalityPreset: string[]
+  myPersonalityCustom: string
   myReligion: string
   partnerGender: string
   partnerAge: string
   partnerMBTI: string
-  partnerPersonality: string[]
+  partnerPersonalityPreset: string[]
+  partnerPersonalityCustom: string
   partnerReligion: string
   relationshipDuration: string
   breakupDate: string
@@ -56,8 +58,8 @@ export function ReconciliationReport({ formData, analysisResult }: Reconciliatio
     let environmental = 50
     let other = 50
 
-    const myPersonality = Array.isArray(formData?.myPersonality) ? formData.myPersonality : []
-    const partnerPersonality = Array.isArray(formData?.partnerPersonality) ? formData.partnerPersonality : []
+    const myPersonality = Array.isArray(formData?.myPersonalityPreset) ? formData.myPersonalityPreset : []
+    const partnerPersonality = Array.isArray(formData?.partnerPersonalityPreset) ? formData.partnerPersonalityPreset : []
 
     // Emotional factors
     if (formData?.relationshipDuration === "more-than-5y") emotional += 20
@@ -489,24 +491,24 @@ export function ReconciliationReport({ formData, analysisResult }: Reconciliatio
                     <h3 className="text-base md:text-lg font-semibold">심리적 요인</h3>
                   </div>
                   <div className="space-y-3 text-xs md:text-sm leading-relaxed">
-                    {formData.myPersonality && formData.myPersonality.length > 0 && (
+                    {formData.myPersonalityPreset && formData.myPersonalityPreset.length > 0 && (
                       <p>
-                        본인의 성격 특성({formData.myPersonality.join(", ")})은 재회 과정에서
-                        {formData.myPersonality.includes("적극적")
+                        본인의 성격 특성({formData.myPersonalityPreset.join(", ")})은 재회 과정에서
+                        {formData.myPersonalityPreset.includes("적극적")
                           ? " 주도적인 접근을 가능하게 합니다."
-                          : formData.myPersonality.includes("회피형")
+                          : formData.myPersonalityPreset.includes("회피형")
                             ? " 신중한 접근이 필요함을 시사합니다."
                             : " 균형잡힌 접근이 효과적일 것입니다."}
                       </p>
                     )}
-                    {formData.partnerPersonality && formData.partnerPersonality.length > 0 && (
+                    {formData.partnerPersonalityPreset && formData.partnerPersonalityPreset.length > 0 && (
                       <p>
-                        상대방의 성격 특성({formData.partnerPersonality.join(", ")})을 고려할 때,
-                        {formData.partnerPersonality.includes("회피형")
+                        상대방의 성격 특성({formData.partnerPersonalityPreset.join(", ")})을 고려할 때,
+                        {formData.partnerPersonalityPreset.includes("회피형")
                           ? " 직접적인 압박보다는 여유를 주는 것이 효과적입니다."
-                          : formData.partnerPersonality.includes("불안형")
+                          : formData.partnerPersonalityPreset.includes("불안형")
                             ? " 안정감을 주는 접근이 중요합니다."
-                            : formData.partnerPersonality.includes("안정형")
+                            : formData.partnerPersonalityPreset.includes("안정형")
                               ? " 솔직하고 성숙한 대화가 가능할 것입니다."
                               : " 상대방의 반응을 살피며 단계적으로 접근하는 것이 좋습니다."}
                       </p>
@@ -625,13 +627,13 @@ export function ReconciliationReport({ formData, analysisResult }: Reconciliatio
                   <div>
                     <h4 className="mb-2 font-semibold text-primary">상대방의 성격 키워드에 따른 현재 심리</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      {formData.partnerPersonality.includes("회피형")
+                      {formData.partnerPersonalityPreset.includes("회피형")
                         ? "회피형 성향이 있어 자신의 감정을 억누르고 거리를 두려는 경향이 있습니다. 미련이 있어도 먼저 연락하기 어려워하며, 압박을 받으면 더 멀어질 수 있습니다."
-                        : formData.partnerPersonality.includes("불안형")
+                        : formData.partnerPersonalityPreset.includes("불안형")
                           ? "불안형 성향이 있어 이별 후에도 감정적으로 혼란스러워하고 있을 가능성이 높습니다. 재회를 원하지만 거절당할까 두려워 먼저 연락하지 못하고 있을 수 있습니다."
-                          : formData.partnerPersonality.includes("안정형")
+                          : formData.partnerPersonalityPreset.includes("안정형")
                             ? "안정형 성향이 있어 이별을 받아들이고 감정을 정리하는 능력이 뛰어납니다. 하지만 합리적으로 관계를 재평가할 수 있어, 변화된 모습을 보여주면 재회를 고려할 수 있습니다."
-                            : formData.partnerPersonality.includes("직설적")
+                            : formData.partnerPersonalityPreset.includes("직설적")
                               ? "직설적인 성향이 있어 이별 결정도 명확했을 것입니다. 하지만 솔직한 대화를 통해 문제를 해결할 수 있다면 재회 가능성이 있습니다."
                               : "상대방의 성격을 고려할 때, 현재 이별에 대해 나름의 방식으로 감정을 정리하고 있을 것입니다."}
                     </p>
@@ -700,9 +702,9 @@ export function ReconciliationReport({ formData, analysisResult }: Reconciliatio
                     <div className="flex-1">
                       <h4 className="mb-2 font-semibold">어떤 스탠스를 취해야 하는지</h4>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        {formData.partnerPersonality.includes("회피형")
+                        {formData.partnerPersonalityPreset.includes("회피형")
                           ? "감정적 압박을 주지 않는 중립적 스탠스가 효과적입니다. 여유를 주고 상대방이 편안함을 느끼도록 하세요."
-                          : formData.partnerPersonality.includes("불안형")
+                          : formData.partnerPersonalityPreset.includes("불안형")
                             ? "안정감을 주는 따뜻한 스탠스가 필요합니다. 진심을 담아 감정을 표현하되, 부담을 주지 않도록 주의하세요."
                             : formData.breakupReason === "trust"
                               ? "진지하고 책임감 있는 스탠스가 필요합니다. 가벼운 태도는 역효과를 낼 수 있으니 신중하게 접근하세요."
@@ -814,10 +816,10 @@ export function ReconciliationReport({ formData, analysisResult }: Reconciliatio
                   <div>
                     <h4 className="mb-2 font-semibold text-primary">어떤 접근 방식이 좋을까</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      {formData.partnerPersonality.includes("직설적") || formData.partnerPersonality.includes("안정형")
+                      {formData.partnerPersonalityPreset.includes("직설적") || formData.partnerPersonalityPreset.includes("안정형")
                         ? "직접적 접근이 효과적입니다. 솔직하게 재회 의사를 밝히고, 변화된 모습과 구체적인 계획을 제시하세요. 상대방도 명확한 의사 표현을 선호할 것입니다."
-                        : formData.partnerPersonality.includes("회피형") ||
-                            formData.partnerPersonality.includes("예민함")
+                        : formData.partnerPersonalityPreset.includes("회피형") ||
+                            formData.partnerPersonalityPreset.includes("예민함")
                           ? "우회적 접근이 필요합니다. 재회를 직접 언급하기보다는 자연스럽게 관계를 회복해 나가면서 상대방이 편안함을 느끼도록 하세요."
                           : "단계적 접근이 좋습니다. 먼저 친구 관계를 회복하고, 신뢰를 쌓은 후 재회를 제안하는 것이 안전합니다."}
                     </p>
@@ -829,7 +831,7 @@ export function ReconciliationReport({ formData, analysisResult }: Reconciliatio
                       진심과 공감을 중심으로 표현하세요. "네가 그랬잖아"보다는 "내가 그때 이렇게 느꼈어"처럼 자신의
                       감정을 솔직하게 전달하는 것이 좋습니다. 상대방의 입장도 이해하고 있음을 보여주고, 과거의 잘못을
                       인정하는 겸손한 태도가 필요합니다.
-                      {formData.partnerPersonality.includes("감성적") || formData.myMBTI?.includes("F")
+                      {formData.partnerPersonalityPreset.includes("감성적") || formData.myMBTI?.includes("F")
                         ? " 감정적 표현을 두려워하지 마세요. 진심 어린 감정 표현이 상대방의 마음을 움직일 것입니다."
                         : " 과도한 감정 표현보다는 차분하고 이성적인 톤을 유지하면서도 진심을 담아 표현하세요."}
                     </p>
