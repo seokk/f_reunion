@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ArrowRight, Loader2 } from "lucide-react"
 import { ReconciliationReport } from "@/components/reconciliation-report"
-import { analyzeReunionProbability } from "@/lib/api"
+import { analyzeReunionProbability, ReunionAnalysis } from "@/lib/api"
 
 interface FormData {
   // Personal info
@@ -59,7 +59,7 @@ export function ConsultationForm() {
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showReport, setShowReport] = useState(false)
-  const [analysisResult, setAnalysisResult] = useState<string>("")
+  const [analysisResult, setAnalysisResult] = useState<ReunionAnalysis | null>(null)
   const [error, setError] = useState<string>("")
   const [formData, setFormData] = useState<FormData>({
     myGender: "",
@@ -106,7 +106,7 @@ export function ConsultationForm() {
 
     try {
       const result = await analyzeReunionProbability(formData)
-      setAnalysisResult(result.response)
+      setAnalysisResult(result)
       setShowReport(true)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "분석 중 오류가 발생했습니다."

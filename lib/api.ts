@@ -26,8 +26,60 @@ interface FormData {
   additionalInfo: string
 }
 
+// Structured Output 타입 정의
+interface FactorScore {
+  score: number
+  analysis: string
+}
+
+interface FactorAnalysis {
+  emotional: FactorScore
+  psychological: FactorScore
+  environmental: FactorScore
+  other: FactorScore
+}
+
+interface PartnerPsychology {
+  breakup_reason_analysis: string
+  personality_analysis: string
+  reunion_willingness: string
+}
+
+interface ReunionRequirements {
+  solution: string
+  contact_timing: string
+  approach_stance: string
+  contact_method: string
+  considerations: string[]
+}
+
+interface RelationshipMaintenanceTip {
+  title: string
+  description: string
+}
+
+interface RelationshipMaintenance {
+  introduction: string
+  tips: RelationshipMaintenanceTip[]
+}
+
+interface FinalAdvice {
+  approach_method: string
+  emotion_expression: string
+  optimal_timing: string
+}
+
+export interface ReunionAnalysis {
+  overall_probability: number
+  factor_analysis: FactorAnalysis
+  partner_psychology: PartnerPsychology
+  reunion_requirements: ReunionRequirements
+  relationship_maintenance: RelationshipMaintenance
+  final_advice: FinalAdvice
+}
+
 interface AnalysisResponse {
-  response: string
+  response: string  // JSON 문자열
   tokens_used: number
   tokens_remaining_today: number
 }
@@ -123,9 +175,9 @@ ${formData.additionalInfo ? `## 추가 정보\n${formData.additionalInfo}` : ''}
 }
 
 /**
- * 백엔드 API에 재회 분석 요청
+ * 백엔드 API에 재회 분석 요청 (Structured Output)
  */
-export async function analyzeReunionProbability(formData: FormData): Promise<AnalysisResponse> {
+export async function analyzeReunionProbability(formData: FormData): Promise<ReunionAnalysis> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888'
   const apiKey = process.env.NEXT_PUBLIC_API_KEY || 'your-api-key-1'
 
@@ -143,7 +195,7 @@ export async function analyzeReunionProbability(formData: FormData): Promise<Ana
     },
     body: JSON.stringify({
       message: message,
-      max_tokens: 2000
+      max_tokens: 16384  // Structured Output은 더 많은 토큰 필요
     })
   })
 
@@ -157,10 +209,18 @@ export async function analyzeReunionProbability(formData: FormData): Promise<Ana
 
   const data: AnalysisResponse = await response.json()
   console.log('=== API 응답 성공 ===')
-  console.log('응답 데이터:', data)
   console.log('사용된 토큰:', data.tokens_used)
   console.log('남은 토큰:', data.tokens_remaining_today)
   console.log('응답 내용 길이:', data.response.length, '자')
 
-  return data
+  // JSON 파싱
+  try {
+    const parsedAnalysis: ReunionAnalysis = JSON.parse(data.response)
+    console.log('Structured Output 파싱 성공:', parsedAnalysis)
+    return parsedAnalysis
+  } catch (error) {
+    console.error('JSON 파싱 에러:', error)
+    console.error('응답 내용:', data.response)
+    throw new Error('백엔드 응답을 파싱하는데 실패했습니다.')
+  }
 }
