@@ -1,3 +1,4 @@
+
 interface FormData {
   // Personal info
   myGender: string
@@ -175,52 +176,49 @@ ${formData.additionalInfo ? `## 추가 정보\n${formData.additionalInfo}` : ''}
 }
 
 /**
- * 백엔드 API에 재회 분석 요청 (Structured Output)
+ * 백엔드 API에 재회 분석 요청
  */
 export async function analyzeReunionProbability(formData: FormData): Promise<ReunionAnalysis> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888'
-  const apiKey = process.env.NEXT_PUBLIC_API_KEY || 'your-api-key-1'
+  const backendApiUrl = 'https://reunion-147203938140.europe-west1.run.app/api/v1/chat/'
 
-  const message = formatFormDataToMessage(formData)
+  const message = formatFormDataToMessage(formData);
 
-  console.log('=== API 요청 시작 ===')
-  console.log('API URL:', `${apiUrl}/api/v1/chat`)
-  console.log('요청 메시지:', message)
+  console.log('=== API 요청 시작 (백엔드 직접 호출) ===');
+  console.log('API URL:', backendApiUrl);
+  console.log('message:', message);
 
-  const response = await fetch(`${apiUrl}/api/v1/chat`, {
+  const response = await fetch(backendApiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key': apiKey
+      'X-API-Key': 'your-api-key-1' // API 키 헤더 추가
     },
     body: JSON.stringify({
-      message: message,
-      max_tokens: 16384  // Structured Output은 더 많은 토큰 필요
+      message: message
     })
-  })
+  });
 
-  console.log('응답 상태:', response.status, response.statusText)
+  console.log('응답 상태:', response.status, response.statusText);
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-    console.error('API 에러:', errorData)
-    throw new Error(errorData.error || `API request failed with status ${response.status}`)
+    const errorText = await response.text();
+    console.error('API 에러:', errorText);
+    throw new Error(`API 요청 실패: ${response.status} ${errorText}`);
   }
 
-  const data: AnalysisResponse = await response.json()
-  console.log('=== API 응답 성공 ===')
-  console.log('사용된 토큰:', data.tokens_used)
-  console.log('남은 토큰:', data.tokens_remaining_today)
-  console.log('응답 내용 길이:', data.response.length, '자')
+  // 백엔드 응답이 AnalysisResponse 형태라고 가정
+  const analysisResponse: AnalysisResponse = await response.json();
 
-  // JSON 파싱
   try {
-    const parsedAnalysis: ReunionAnalysis = JSON.parse(data.response)
-    console.log('Structured Output 파싱 성공:', parsedAnalysis)
-    return parsedAnalysis
-  } catch (error) {
-    console.error('JSON 파싱 에러:', error)
-    console.error('응답 내용:', data.response)
-    throw new Error('백엔드 응답을 파싱하는데 실패했습니다.')
+    // response 필드는 JSON 문자열이므로 파싱
+    const analysisResult: ReunionAnalysis = JSON.parse(analysisResponse.response);
+    console.log('=== API 응답 성공 ===');
+    console.log('파싱된 분석 결과:', analysisResult);
+    return analysisResult;
+  } catch (e) {
+    console.error("Failed to parse the 'response' field from the backend.", e);
+    // 백엔드에서 받은 원본 문자열을 로그로 남겨 디버깅을 돕습니다.
+    console.error("Original 'response' string:", analysisResponse.response);
+    throw new Error("Backend response parsing failed.");
   }
 }

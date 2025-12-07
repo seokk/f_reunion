@@ -13,7 +13,7 @@ export function Hero() {
               <span className="text-lg font-bold">재회 상담소</span>
             </div>
             <Link
-              href="/about"
+              href="/"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
               서비스 소개
