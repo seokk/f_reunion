@@ -1,4 +1,3 @@
-
 interface FormData {
   // Personal info
   myGender: string
@@ -187,17 +186,21 @@ export async function analyzeReunionProbability(formData: FormData): Promise<Reu
   console.log('API URL:', backendApiUrl);
   console.log('message:', message);
 
+  const requestHeaders = {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'QkFTRTY0X0RBTkdfUkFORE9NX0tFWTIwMjUxMjMw' // API 키 헤더 추가
+  };
+  
+  console.log('X-API-Key:', requestHeaders['X-API-Key']);
+
   const response = await fetch(backendApiUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': 'your-api-key-1' // API 키 헤더 추가
-    },
+    headers: requestHeaders,
     body: JSON.stringify({
       message: message
     })
   });
-
+  
   console.log('응답 상태:', response.status, response.statusText);
 
   if (!response.ok) {
