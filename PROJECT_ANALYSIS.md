@@ -203,9 +203,14 @@
   - 변경: `f_reunion/app/page.tsx`
   - 내용: `next/script` 대신 일반 `<script async ...>`로 전환하여 `data-nscript` 관련 경고 대응
 
+  3. Footer 문의 채널 확장
+  - 변경: `f_reunion/components/site-footer.tsx`
+  - 내용: 문의 이메일 하단에 인스타그램/텔레그램 아이콘 링크 추가(환경변수 설정 시 노출)
+
 - 참고:
   - CSS preload warning(`preloaded but not used`)은 App Router 정적 배포 환경에서 발생 가능한 성능 힌트 수준 경고로 기능 오류는 아님
 
 - 검증 결과:
   - `npm run build` 성공
   - 배포 후 `/about#consultation`에서 광고 시청 후 상담 아이콘/라벨 표시 확인
+  - footer 문의 영역에서 인스타그램/텔레그램 아이콘 노출 확인
