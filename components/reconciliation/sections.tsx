@@ -3,9 +3,11 @@ import {
   Brain,
   Clock,
   Heart,
+  Instagram,
   Lock,
   MessageCircle,
   Play,
+  Send,
   Target,
   Users,
 } from "lucide-react"
@@ -242,13 +244,54 @@ export function FinalAdviceCard({ analysis }: FinalAdviceCardProps) {
 }
 
 export function ConsultationCtaCard() {
+  const instagramDmUrl = process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL
+  const telegramDmUrl = process.env.NEXT_PUBLIC_TELEGRAM_DM_URL
+
+  const hasContactLinks = Boolean(instagramDmUrl || telegramDmUrl)
+
   return (
     <Card className="overflow-hidden bg-gradient-to-br from-primary to-accent p-8 text-center text-primary-foreground depth-xl border-0">
       <h3 className="mb-2 text-2xl font-bold text-balance">더 깊은 상담이 필요하신가요?</h3>
-      <p className="mb-6 text-primary-foreground/90">전문 상담사와의 1:1 맞춤 상담으로 구체적인 실행 계획을 세워보세요</p>
-      <Button size="lg" variant="secondary" className="bg-background text-foreground hover:bg-background/90 depth-md hover:depth-lg transition-all">
-        전문 상담 신청하기
-      </Button>
+      <p className="mb-6 text-primary-foreground/90">지금 바로 1:1 상담 채널로 연결해 맞춤 조언을 받아보세요.</p>
+
+      {hasContactLinks ? (
+        <div className="flex items-center justify-center gap-4">
+          {instagramDmUrl && (
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                asChild
+                size="icon-lg"
+                variant="secondary"
+                className="rounded-full bg-background text-foreground hover:bg-background/90 depth-md hover:depth-lg transition-all"
+              >
+                <a href={instagramDmUrl} target="_blank" rel="noopener noreferrer" aria-label="인스타그램으로 상담하기">
+                  <Instagram className="size-5" />
+                </a>
+              </Button>
+              <span className="text-xs text-primary-foreground/90">Instagram</span>
+            </div>
+          )}
+          {telegramDmUrl && (
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                asChild
+                size="icon-lg"
+                variant="secondary"
+                className="rounded-full bg-background text-foreground hover:bg-background/90 depth-md hover:depth-lg transition-all"
+              >
+                <a href={telegramDmUrl} target="_blank" rel="noopener noreferrer" aria-label="텔레그램으로 상담하기">
+                  <Send className="size-5" />
+                </a>
+              </Button>
+              <span className="text-xs text-primary-foreground/90">Telegram</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <p className="text-sm text-primary-foreground/90">
+          운영자 설정 필요: <code>NEXT_PUBLIC_INSTAGRAM_DM_URL</code> 또는 <code>NEXT_PUBLIC_TELEGRAM_DM_URL</code>
+        </p>
+      )}
     </Card>
   )
 }

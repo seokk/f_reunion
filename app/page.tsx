@@ -11,16 +11,14 @@ import {
   MessageSquare,
 } from "lucide-react"
 import Link from "next/link"
-import Script from "next/script"
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-primary/5">
-      <Script
+      <script
         async
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4764868136780831"
         crossOrigin="anonymous"
-        strategy="afterInteractive"
       />
 
       {/* Header */}

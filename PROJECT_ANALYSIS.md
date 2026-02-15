@@ -20,55 +20,69 @@
 2. `상담 시작하기`로 `/about#consultation` 이동
 3. `ConsultationForm`에서 4단계 정보 입력
 4. 제출 시 `analyzeReunionProbability()` 실행
-5. `lib/api.ts`가 백엔드 `/api/v1/chat/` 직접 호출
-6. 응답의 `response` 문자열(JSON)을 다시 `JSON.parse`하여 화면 표시
-7. `ReconciliationReport`에서 일부 내용은 광고 시청 전/후로 분리 노출
+5. 프론트는 `lib/api.ts`를 통해 내부 라우트 `/api/reunion/analyze` 호출
+6. 내부 라우트(`app/api/reunion/analyze/route.ts`)가 서버 환경변수 기반으로 백엔드 `/api/v1/chat/` 호출
+7. 입력은 Zod 스키마(`lib/consultation-schema.ts`)로 검증 후 전송
+8. 응답은 스키마(`lib/reunion-analysis-schema.ts`)로 검증 후 화면 표시
+9. `ReconciliationReport`에서 일부 내용은 광고 시청 전/후로 분리 노출
 
 ## 4) 빌드/배포 특성
 - `next.config.mjs`
-  - `typescript.ignoreBuildErrors: true` (타입 에러가 있어도 빌드 진행)
-  - `output: 'export'` (정적 export 전제)
   - `images.unoptimized: true`
-- `dist/` 폴더 존재로 정적 산출물 배포 흐름이 이미 사용 중인 상태로 보임
+- 타입 에러는 빌드에서 차단됨(`ignoreBuildErrors` 제거)
+- `/api/reunion/analyze` 서버 라우트가 추가되어 완전 정적 export 전제와 분리된 구조
 
 ## 5) API 연동 구조
-- 백엔드 URL이 코드에 하드코딩:
-  - `https://reunion-147203938140.europe-west1.run.app/api/v1/chat/`
-- 헤더 `X-API-Key`도 프론트 코드에 하드코딩
-- 실패 시 에러 텍스트를 그대로 `Error`로 변환
+- 클라이언트는 내부 API(`/api/reunion/analyze`)만 호출
+- 백엔드 URL/API 키는 서버 환경변수 사용
+  - `REUNION_API_URL`
+  - `REUNION_API_KEY`
+- 서버 라우트에서 입력/응답을 스키마 검증하고 표준 에러 코드 반환
+  - `VALIDATION_ERROR`, `AUTH_ERROR`, `PARSE_ERROR`, `UPSTREAM_ERROR`, `NETWORK_ERROR` 등
 
 ## 6) 유지보수 관점 핵심 포인트
-- API 스키마는 `lib/api.ts`의 `ReunionAnalysis` 타입과 강결합
-- 백엔드 응답 필드 `response`가 문자열 JSON이라는 가정에 의존
-- 폼 검증이 강하지 않아(필수값/범위 제한 부족) 잘못된 요청 가능
-- `consultation-form.tsx`, `reconciliation-report.tsx` 단일 파일이 크고 상태가 많아 변경 난이도 높음
+- 타입/스키마 기준점이 분리됨
+  - 입력: `lib/consultation-schema.ts`
+  - 분석 결과: `lib/reunion-analysis-schema.ts`
+  - 프롬프트 메시지 변환: `lib/reunion-message.ts`
+- 에러 매핑이 중앙화됨: `lib/analyze-error.ts`
+- 대형 컴포넌트가 분리되어 수정 범위가 축소됨
+  - `components/consultation/steps.tsx`
+  - `components/reconciliation/sections.tsx`
 
 ## 7) 즉시 확인이 필요한 리스크
-- 비밀정보 노출:
-  - `lib/api.ts`에 API 키가 클라이언트 번들로 노출됨
-- 운영 안정성:
-  - 백엔드 URL 하드코딩으로 환경별(dev/stage/prod) 전환 어려움
-  - `ignoreBuildErrors: true`로 타입 이슈가 배포에 누락될 가능성
-- 보안/비용:
-  - 누구나 브라우저에서 키 확인 후 백엔드 직접 호출 가능
+- 잔여 운영 리스크:
+  - 내부 API 라우트 사용으로 서버 런타임(또는 동등한 프록시 계층) 필요
+  - 환경변수 미설정 시 `CONFIG_ERROR`로 요청 실패
+  - `npm run lint`는 현재 `eslint` 실행 환경 정비 필요
 
 ## 8) 개선 우선순위 제안
-1. API 키를 프론트에서 제거하고, Next 서버 라우트(BFF) 또는 백엔드 인증 재설계
-2. API URL을 환경변수(`NEXT_PUBLIC_API_BASE_URL` 등)로 분리
-3. `ignoreBuildErrors` 제거 후 타입 에러를 CI에서 차단
-4. 폼 스키마 기반 검증(`zod`/`react-hook-form`) 강화
-5. `consultation-form`/`reconciliation-report`를 단계별 컴포넌트로 분리
-6. 에러 상태 UI 표준화(네트워크, 인증, 파싱 실패 케이스 분리)
+1. 완료: API 키 제거 + BFF(`/api/reunion/analyze`) 적용
+2. 완료: 백엔드 URL/API 키 환경변수 분리
+3. 완료: `ignoreBuildErrors` 제거
+4. 완료: Zod 기반 입력/응답 검증 강화
+5. 완료: `consultation-form`/`reconciliation-report` 분리 리팩터링
+6. 완료: 에러 상태 UI 표준화(코드별 안내 문구/복구 안내)
+7. 후속 권장: CI에 `npm run build` + lint 환경 고정
+8. 후속 권장: e2e/통합 테스트 추가(폼 검증, API 오류 코드별 UI 검증)
 
 ## 9) 참고 파일
 - `f_reunion/lib/api.ts`
+- `f_reunion/lib/analyze-error.ts`
+- `f_reunion/lib/consultation-schema.ts`
+- `f_reunion/lib/reunion-analysis-schema.ts`
+- `f_reunion/lib/reunion-message.ts`
+- `f_reunion/app/api/reunion/analyze/route.ts`
+- `f_reunion/.env.example`
 - `f_reunion/components/consultation-form.tsx`
+- `f_reunion/components/consultation/steps.tsx`
 - `f_reunion/components/reconciliation-report.tsx`
+- `f_reunion/components/reconciliation/sections.tsx`
 - `f_reunion/next.config.mjs`
 - `f_reunion/app/page.tsx`
 - `f_reunion/app/about/page.tsx`
 
-## 10) 작업 이력 (AdSense 정책 대응)
+## 10) 작업 이력
 ### 2026-02-15
 - 배경:
   - AdSense 경고: `Google-served ads on screens without publisher-content`
@@ -109,3 +123,89 @@
 - 검증 결과:
   - `npm run build` 성공
   - 정적 라우트 생성 확인: `/`, `/about`, `/privacy`, `/terms`
+
+### 2026-02-15 (구조/보안/유지보수 개선)
+- 적용 변경:
+  1. 프론트 직접 백엔드 호출 제거(BFF 적용)
+  - 추가: `f_reunion/app/api/reunion/analyze/route.ts`
+  - 변경: `f_reunion/lib/api.ts`
+  - 내용: API 키를 서버로 이동하고 내부 라우트만 호출
+
+  2. 환경변수 기반 운영 설정 전환
+  - 추가: `f_reunion/.env.example`
+  - 내용: `REUNION_API_URL`, `REUNION_API_KEY` 기준으로 실행
+
+  3. 검증/파싱 안정성 강화
+  - 추가: `f_reunion/lib/consultation-schema.ts`
+  - 추가: `f_reunion/lib/reunion-analysis-schema.ts`
+  - 추가: `f_reunion/lib/reunion-message.ts`
+  - 내용: 입력/응답 스키마 검증 및 메시지 빌더 분리
+
+  4. 타입 엄격 배포 복구
+  - 변경: `f_reunion/next.config.mjs`
+  - 내용: `ignoreBuildErrors` 제거
+
+  5. 컴포넌트 모듈화
+  - 변경: `f_reunion/components/consultation-form.tsx`
+  - 추가: `f_reunion/components/consultation/steps.tsx`
+  - 변경: `f_reunion/components/reconciliation-report.tsx`
+  - 추가: `f_reunion/components/reconciliation/sections.tsx`
+  - 내용: 대형 파일을 상태/표현 계층으로 분리
+
+  6. 에러 UI 표준화
+  - 추가: `f_reunion/lib/analyze-error.ts`
+  - 변경: `f_reunion/components/consultation-form.tsx`
+  - 변경: `f_reunion/components/consultation/steps.tsx`
+  - 내용: 네트워크/인증/응답파싱/입력오류를 코드별 문구로 구분 표시
+
+- 검증 결과:
+  - `npm run build` 성공
+  - 라우트 확인: `/api/reunion/analyze` 생성
+
+### 2026-02-15 (배포 이슈 정리: Firebase 정적 호스팅)
+- 배경:
+  - 실제 배포는 `Firebase Hosting + f_reunion/out`(정적 산출물) 기반
+  - 코드가 `app/api/reunion/analyze`(Next 서버 라우트) 의존으로 변경되어 정적 배포와 불일치 발생
+  - 결과적으로 배포 번들에서 구버전 스크립트/로그가 보이거나, API 동작이 기대와 다를 수 있는 상태였음
+
+- 원인:
+  - 정적 export(`out`)는 Next 서버 라우트를 포함하지 않음
+  - `firebase deploy`는 `f_reunion/out`만 업로드하므로 서버 라우트 기반 구조는 배포 산출물에 반영되지 않음
+
+- 적용 변경:
+  1. 정적 배포 호환 구조로 재정렬
+  - 변경: `f_reunion/next.config.mjs`
+  - 내용: `output: "export"` 명시
+
+  2. 서버 라우트 제거
+  - 삭제: `f_reunion/app/api/reunion/analyze/route.ts`
+
+  3. API 호출 경로 정적 호스팅 방식으로 전환
+  - 변경: `f_reunion/lib/api.ts`
+  - 내용: 내부 `/api/reunion/analyze` 대신 `NEXT_PUBLIC_REUNION_API_URL` 직접 호출
+
+  4. 환경변수 키 정리
+  - 변경: `f_reunion/.env.example`
+  - 내용: `NEXT_PUBLIC_REUNION_API_URL`, `NEXT_PUBLIC_REUNION_API_KEY` 기준으로 통일
+
+- 검증 결과:
+  - `npm run build` 성공, `out/` 재생성 완료
+  - 구버전 디버그 문자열(`=== API 응답 성공 ===`)이 최신 `out` 번들에서 제거됨
+  - Firebase 정적 배포 기준으로 최신 코드 반영 확인
+
+### 2026-02-15 (UI/콘솔 경고 마무리)
+- 적용 변경:
+  1. 상담 CTA 아이콘 라벨 추가
+  - 변경: `f_reunion/components/reconciliation/sections.tsx`
+  - 내용: 인스타그램/텔레그램 아이콘 하단에 `Instagram`, `Telegram` 라벨 표시
+
+  2. AdSense 콘솔 경고 완화
+  - 변경: `f_reunion/app/page.tsx`
+  - 내용: `next/script` 대신 일반 `<script async ...>`로 전환하여 `data-nscript` 관련 경고 대응
+
+- 참고:
+  - CSS preload warning(`preloaded but not used`)은 App Router 정적 배포 환경에서 발생 가능한 성능 힌트 수준 경고로 기능 오류는 아님
+
+- 검증 결과:
+  - `npm run build` 성공
+  - 배포 후 `/about#consultation`에서 광고 시청 후 상담 아이콘/라벨 표시 확인
